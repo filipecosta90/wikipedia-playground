@@ -1,36 +1,40 @@
 #!/usr/bin/env python
 """Module and script to parse pub-sub events and write them to Redis hashes."""
-import json
+import asyncio as aio
 
-import redis
+import aioredis
 
 from wikiutils import current_timestamp, pubsub_channel, redis_url
 
-r = redis.Redis.from_url(redis_url)
+
+async def process():
+    redis = await aioredis.create_redis_pool(redis_url)
+    while True:
+
+        try:
+            """Process messages from the stream."""
+            result = await redis.xread([pubsub_channel])
+            await process_message(redis, result)
+
+        except (ConnectionError, aio.TimeoutError, aio.CancelledError):
+            pass
 
 
-def process():
-    """Process messages from the pubsub stream."""
-    ps = r.pubsub()
-    ps.subscribe(pubsub_channel)
-    for raw_message in ps.listen():
-        if raw_message["type"] != "message":
-            continue
-        message = json.loads(raw_message["data"])
-        process_message(message)
-
-
-def process_message(message):
+async def process_message(redis, message):
     """Process single decoded message."""
-    domain = message["meta"]["domain"]
-    ts = current_timestamp()
-    keys = ["ev", f"ev:{domain}"]
-    pipe = r.pipeline()
-    for key in keys:
-        pipe.hincrby(key, ts, 1)
-    pipe.sadd("known_domains", domain)
-    pipe.execute()
+
+    stream_ts = int(message[0][1].decode('ascii').split("-")[0]) / 1000
+    ts = current_timestamp(stream_ts)
+    message = dict(message[0][2])
+    if b'meta_domain' in message.keys():
+        domain = message[b'meta_domain'].decode('ascii')
+        keys = ["ev", f"ev:{domain}"]
+        pipe = redis.pipeline()
+        for key in keys:
+            pipe.hincrby(key, ts, 1)
+        pipe.sadd("known_domains", domain)
+        await pipe.execute()
 
 
 if __name__ == "__main__":
-    process()
+    aio.run(process(), debug=True)

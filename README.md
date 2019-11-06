@@ -18,11 +18,26 @@ curl https://stream.wikimedia.org/v2/stream/recentchange
 Running Redis server
 --------------------
 
-To run these examples you need to run a Redis server.
+To run these examples you need to run a Redis server. We're including also the new [RedisInsight](https://redislabs.com/redisinsight/) which is a cool browser-based management interface for your Redis deployment.
 
 ```
-docker-compose up
+docker-compose up -d
 ```
+
+If you access on your browser the address `localhost:8001` you should be able to configure in 1 step the RedisInsight and have a visual fell of Redis. 
+
+
+Configure RedisInsight:
+![alt text][redisinsight_configure]
+
+
+Visual Feel of your new Redis Pet Project:
+![alt text][redisinsight_overview]
+
+
+[redisinsight_configure]: ./docs/redisinsight_configure.png "Configure RedisInsight"
+[redisinsight_overview]: ./docs/redisinsight_overview.png "Visual Feel of your new Redis Pet Project"
+
 
 Installing dependencies
 -----------------------
@@ -47,12 +62,20 @@ Run the script:
 pipenv run ./redis_publisher.py
 ```
 
-It immediately starts publishing events to the channel. You can visualize them
+It immediately starts publishing events to the stream. You can visualize them
 with a simple Redis client
 
 ```
 redis-cli subscribe wiki
 ```
+
+or by using RedisInsight Streams visual feature:
+![alt text][redisinsight_streams]
+
+
+
+[redisinsight_streams]: ./docs/redisinsight_streams.png "RedisInsight Streams visual feature"
+
 
 Type Ctrl+C to quit.
 
@@ -109,7 +132,10 @@ pipenv run ./dash_app.py
 
 As a result, you should see:
 
-![](./wikipedia-changes-screenshot.png)
+![alt text][wikipedia-changes-screenshot]
+
+[wikipedia-changes-screenshot]: ./docs/wikipedia-changes-screenshot.png "Wkipedia changes screenshot"
+
 
 
 More information

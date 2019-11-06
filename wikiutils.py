@@ -12,9 +12,11 @@ history_sec = 1800
 aggregation_interval_sec = 10
 
 
-def current_timestamp():
+def current_timestamp(value=None):
     """Get a new timestamp every "aggregation_interval_sec" seconds."""
-    return int(time.time() // aggregation_interval_sec) * aggregation_interval_sec
+    if value is None:
+        value = time.time()
+    return int(value // aggregation_interval_sec) * aggregation_interval_sec
 
 
 def all_timestamps():
